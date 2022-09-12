@@ -1,0 +1,449 @@
+{
+	"info": {
+		"_postman_id": "488e570d-2512-43d5-9544-ef6bfe9c6f80",
+		"name": "datastream",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get all documents",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:9201/_search",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9201",
+					"path": [
+						"_search"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Change rollover interval",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"transient\": {\n    \"indices.lifecycle.poll_interval\": \"5s\"\n  }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9201/_cluster/settings",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9201",
+					"path": [
+						"_cluster",
+						"settings"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create ilm policy",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"policy\": {\n    \"_meta\": {\n      \"description\": \"meetup ilm policy\"\n    },\n    \"phases\": {\n      \"hot\": {\n        \"min_age\": \"0ms\",\n        \"actions\": {\n          \"rollover\": {\n            \"max_age\": \"1d\",\n            \"max_docs\": 3,\n            \"max_size\": \"20gb\"\n          }\n        }\n      },\n      \"delete\": {\n        \"min_age\": \"60d\",\n        \"actions\": {\n          \"delete\": {}\n        }\n      }\n    }\n  }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9201/_ilm/policy/meetup-policy",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9201",
+					"path": [
+						"_ilm",
+						"policy",
+						"meetup-policy"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get ilm policy",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9201/_ilm/policy/meetup-policy",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9201",
+					"path": [
+						"_ilm",
+						"policy",
+						"meetup-policy"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create index template",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"index_patterns\": [ \"broadcast-monitoring-docker*\" ],\n  \"data_stream\": { },\n  \"priority\": 500,\n  \"template\": {\n    \"settings\": {\n        \"index.lifecycle.name\": \"meetup-policy\",      \n        \"index.lifecycle.rollover_alias\": \"broadcast-monitoring-docker\"\n    },\n    \"mappings\": {\n        \"properties\": {\n            \"action\": {\n                \"type\": \"text\"\n            },\n            \"ad_id\": {\n                \"type\": \"integer\"\n            },\n            \"service\": {\n                \"type\": \"text\"\n            },\n            \"site_name\": {\n                \"type\": \"keyword\"\n            },\n            \"status\": {\n                \"type\": \"text\"\n            },\n            \"title\": {\n                \"type\": \"text\"\n            },\n            \"vertical\": {\n                \"type\": \"text\"\n            },\n            \"error_message\": {\n                \"type\": \"text\"\n            },\n            \"@timestamp\": {\n                \"type\": \"date\"\n            }\n        }\n    }\n  }\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9201/_index_template/meetup-template",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9201",
+					"path": [
+						"_index_template",
+						"meetup-template"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create 3 documents in broadcast-monitoring-docker",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"create\":{ }}\n{ \"ad_id\": 1, \"action\": \"new\", \"service\": \"ad-gate\", \"site_name\": \"leboncoin\", \"status\": \"error\", \"title\": \"Programme Résidence à Paris 75011\", \"vertical\": \"real_estate\", \"error_message\": \"{\\\"result\\\":{\\\"code\\\":400,\\\"message\\\":\\\"Request data contains bad values\\\"}}\",  \"@timestamp\": \"2021-04-06T11:04:01.102109668+02:00\" }\n{\"create\":{ }}\n{ \"ad_id\": 2, \"action\": \"new\", \"service\": \"ad-gate\", \"site_name\": \"leboncoin\", \"status\": \"error\", \"title\": \"Programme Résidence à Paris 75012\", \"vertical\": \"real_estate\", \"error_message\": \"{\\\"result\\\":{\\\"code\\\":400,\\\"message\\\":\\\"Request data contains bad values\\\"}}\",  \"@timestamp\": \"2021-04-07T11:04:01.102109668+02:00\" }\n{\"create\":{ }}\n{ \"ad_id\": 3, \"action\": \"new\", \"service\": \"ad-gate\", \"site_name\": \"leboncoin\", \"status\": \"error\", \"title\": \"Programme Résidence à Paris 75013\", \"vertical\": \"real_estate\", \"error_message\": \"{\\\"result\\\":{\\\"code\\\":400,\\\"message\\\":\\\"Request data contains bad values\\\"}}\",  \"@timestamp\": \"2021-04-07T11:04:01.102109668+02:00\" }\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9201/broadcast-monitoring-docker/_bulk",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9201",
+					"path": [
+						"broadcast-monitoring-docker",
+						"_bulk"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create document in broadcast-monitoring-docker",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \n    \"ad_id\": 4, \n    \"action\": \"new\", \n    \"service\": \"ad-gate\", \n    \"site_name\": \"leboncoin\", \n    \"status\": \"error\", \n    \"title\": \"Programme Résidence à Paris 75014\", \n    \"vertical\": \"real_estate\", \n    \"error_message\": \"{\\\"result\\\":{\\\"code\\\":400,\\\"message\\\":\\\"Request data contains bad values\\\"}}\",  \n    \"@timestamp\": \"2021-04-08T11:04:01.102109668+02:00\" \n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9201/broadcast-monitoring-docker/_doc",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9201",
+					"path": [
+						"broadcast-monitoring-docker",
+						"_doc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get datastream info",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9201/broadcast-monitoring-docker",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9201",
+					"path": [
+						"broadcast-monitoring-docker"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get datastream rollover info",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9201/.ds-broadcast-monitoring-*/_ilm/explain",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9201",
+					"path": [
+						".ds-broadcast-monitoring-*",
+						"_ilm",
+						"explain"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Post rollover",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9201/broadcast-monitoring-docker/_rollover/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9201",
+					"path": [
+						"broadcast-monitoring-docker",
+						"_rollover",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete data stream broadcast-monitoring-docker",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9201 /_data_stream/broadcast-monitoring-docker",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9201 ",
+					"path": [
+						"_data_stream",
+						"broadcast-monitoring-docker"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete ilm meetup-policy",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9201 /_ilm/policy/meetup-policy",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9201 ",
+					"path": [
+						"_ilm",
+						"policy",
+						"meetup-policy"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete index template",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9201 /_index_template/meetup-template",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9201 ",
+					"path": [
+						"_index_template",
+						"meetup-template"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
